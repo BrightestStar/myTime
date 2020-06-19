@@ -1,0 +1,6 @@
+<h1>{{ day.day_name }}</h1>
+<ul>
+{% for item in day.item_set.all %}
+    <li>{{ item.item_name }}</li>
+{% endfor %}
+</ul>

@@ -1,0 +1,10 @@
+
+{% if latest_days_list %}
+    <ul>
+    {% for day in latest_days_list %}
+        <li><a href="{% url 'times:detail' day.id %}">{{ day.day_name }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No days are available.</p>
+{% endif %}
