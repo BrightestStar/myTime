@@ -1,6 +1,10 @@
-<h1>{{ day.day_name }}</h1>
-<ul>
-{% for item in day.item_set.all %}
-    <li>{{ item.item_name }}</li>
-{% endfor %}
-</ul>
+{% extends './base.html' %}
+
+{% block content %}
+    <h1>{{ day.day_name }}</h1>
+    <ul>
+    {% for item in day.item_set.all %}
+        <li>{{ item.item_name }}: {{item.duration}}</li>
+    {% endfor %}
+    </ul>
+{% endblock %}

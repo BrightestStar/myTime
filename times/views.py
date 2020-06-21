@@ -22,11 +22,21 @@ class DayCreate(CreateView):
     model = Day
     fields = '__all__'
 
+
 class ItemCreate(CreateView):
     model = Item
     fields = '__all__'
+    template_name = 'times/items/item_form.html'
 
+    def items_create(self, request):
+        print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+        print(request)
+        model = Day
+        template_name = 'times/detail.html'
 
+        # return HttpResponseRedirect(reverse('times:detail', args=('2')))
+
+    
 class ItemUpdate(UpdateView):
     model = Item
     fields = ['item_name', 'duration']
@@ -50,3 +60,14 @@ def read_html(request, yy, mm):
     dir_path = DIR_PATH
     files = glob.glob(dir_path % (yy, mm))
     print(files)
+
+
+def gen_batch_days(request):
+    sasdf
+
+
+def gen_batch_items(request, day_id):
+    asdfa
+
+
+
