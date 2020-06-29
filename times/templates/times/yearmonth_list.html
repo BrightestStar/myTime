@@ -1,0 +1,20 @@
+{% extends "base_generic.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+  <h1>Year Month List</h1>
+  <a href="{% url 'times:year_month_create' %}" class="btn btn-sm btn-primary float-right">New Year Month</a>
+  {% if yearmonth_list %}
+  <ul>
+    {% for year_month in yearmonth_list %}
+      <li>
+        <a href="{% url 'times:year_month_update' year_month.pk %}">{{ year_month.year }}-{{ year_month.month }}
+        <a href="{% url 'times:year_month_delete' year_month.pk %}" class="btn btn-sm btn-danger">删除</a>
+      </li>
+      <br>
+    {% endfor %}
+  </ul>
+  {% else %}
+    <p>There are no year_months in the Time Machine.</p>
+  {% endif %}       
+{% endblock %}

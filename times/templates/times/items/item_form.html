@@ -1,4 +1,4 @@
-{% extends '../base.html' %}
+{% extends "base_generic.html" %}
 
 {% load crispy_forms_tags %}
 
@@ -6,7 +6,7 @@
   <form method="post">
     <h1 class="mt-2">Create Item</h1>
     {% csrf_token %}
-    {{ form|crispy }}
+    {{ form.as_table }}
     <button type="submit" class="btn btn-success">Save Item</button>
   </form>
 {% endblock %}

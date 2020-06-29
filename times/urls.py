@@ -4,10 +4,10 @@ from .import views
 
 app_name = 'times'
 urlpatterns = [
-    path('days', views.IndexView.as_view(), name="index"),
-    path('days/<int:pk>/', views.DetailView.as_view(), name="detail"),
-    path('days/create/', views.DayCreate.as_view(), name="day_create"),
-    path('days/<int:pk>/items/add',
-         views.ItemCreate.as_view(), name="items_create"),
-    path('days/generate_days', views.gen_batch_days, name="gen_batch_days"),
+    path('', views.YearMonthListView.as_view(), name="year_months"),
+    path('year_month/create/', views.YearMonthCreate.as_view(), name='year_month_create'),
+    path('year_month/<int:pk>/update/',
+         views.YearMonthUpdate.as_view(), name='year_month_update'),
+    path('year_month/<int:pk>/delete/',
+         views.YearMonthDelete.as_view(), name='year_month_delete'),
 ]
