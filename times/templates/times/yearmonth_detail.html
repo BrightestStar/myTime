@@ -1,0 +1,30 @@
+{% extends "base_generic.html" %}
+{% load crispy_forms_tags %}
+{% load filters_extras %}
+
+{% block content %}
+    <a href="{% url 'times:generate_days' yearmonth.pk %}" class="btn btn-sm btn-primary float-right">Generate Days</a>
+    {% if day_list %}
+        <ul>
+        {% for day in day_list %}
+            <li><a href="{% url 'times:day_detail' day.pk%}">{{ day.day_name|reverse }}</a></li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No days are available.</p>
+    {% endif %}
+{% endblock %}
+
+{% block filter %}
+    <div class="card" style="width: 18rem;">
+        <div class="card-header">
+            Filter By Week
+        </div>
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item"><a href="{% url 'times:week_detail' yearmonth.pk 0%}">1st</a></li>
+            <li class="list-group-item"><a href="{% url 'times:week_detail' yearmonth.pk 1%}">2nd</a></li>
+            <li class="list-group-item"><a href="{% url 'times:week_detail' yearmonth.pk 2%}">3rd</a></li>
+            <li class="list-group-item"><a href="{% url 'times:week_detail' yearmonth.pk 3%}">4th</a></li>
+        </ul>
+    </div>
+{% endblock %}

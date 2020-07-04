@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, re_path
 
 from .import views
 
@@ -10,4 +10,12 @@ urlpatterns = [
          views.YearMonthUpdate.as_view(), name='year_month_update'),
     path('year_month/<int:pk>/delete/',
          views.YearMonthDelete.as_view(), name='year_month_delete'),
+    path('month_detail/<int:pk>',
+         views.MonthDetailView.as_view(), name="month_detail"),
+]
+urlpatterns += [
+    path('weeks/<int:pk>/detail/<int:number>', views.WeekDetailView.as_view(), name="week_detail"),
+    path('days/<int:pk>/detail/', views.DayDetailView.as_view(), name="day_detail"),
+    path('year_month/<int:pk>/generate_days/',
+         views.generate_days, name='generate_days'),
 ]

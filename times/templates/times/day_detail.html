@@ -1,7 +1,9 @@
 {% extends "base_generic.html" %}
+{% load filters_extras %}
 
 {% block content %}
-    <h1>{{ day.day_name }}</h1>
+    <h1>{{ day.day_name|reverse  }}</h1>
+    <p><strong>total: {{ day.time_entry }} minutes </strong></p>
     <ul>
     {% for item in day.item_set.all %}
         <li>{{ item.item_name }}: {{item.duration}}</li>

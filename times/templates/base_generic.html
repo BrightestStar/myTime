@@ -4,18 +4,28 @@
   <head>
     <meta charset="utf-8">
     <title>Time Friend</title>
-
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
   </head>
   <body>
-    <div class="container">
-      <div class="row justify-content-center">
-        <div class="col-8">
-          <hr class="mt-0 mb-4">
-          {% block content %}
-          {% endblock %}
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-2">
+            {% block sidebar %}
+              <ul class="sidebar-nav">
+                <li><a href="{% url 'times:year_months'%}">YearMonths</a></li>
+              </ul>
+            {% endblock %}
+          </div>
+          <div class="col-6">
+            <hr class="mt-0 mb-4">
+            {% block content %}{% endblock %}
+          </div>
+          <div class="col-4">
+            {% block filter %}{% endblock %}
+          </div>
         </div>
       </div>
-    </div>
   </body>
 </html>

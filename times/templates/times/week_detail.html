@@ -1,0 +1,16 @@
+{% extends "base_generic.html" %}
+{% load crispy_forms_tags %}
+{% load filters_extras %}
+
+{% block content %}
+    <a href="{% url 'times:generate_days' yearmonth.pk %}" class="btn btn-sm btn-primary float-right">Generate Days</a>
+    {% if day_list %}
+        <ul>
+        {% for day in day_list %}
+            <li><a href="{% url 'times:day_detail' day.pk%}">{{ day.day_name|reverse }}</a></li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No days are available.</p>
+    {% endif %}
+{% endblock %}

@@ -20,8 +20,9 @@ class Day(models.Model):
     recorder = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True)
     day_name = models.CharField(max_length=200)
-    time_entry = models.DecimalField(decimal_places=2, max_digits=64)
-    pub_date = models.DateTimeField('date pubilshed')
+    time_entry = models.DecimalField(decimal_places=2, max_digits=6, blank=True)
+    pub_date = models.DateTimeField('date pubilshed', null=True)
+    begin_time = models.TimeField()
 
     def __str__(self):
         return self.day_name
