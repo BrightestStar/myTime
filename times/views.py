@@ -114,7 +114,7 @@ class WeekDetailView(generic.DetailView):
     template_name = 'times/week_detail.html'
 
     def get_context_data(self, **kwargs):
-        start_day, end_day = reverse_duration(self.kwargs['number'])
+        start_day, end_day = which_week(self.kwargs['number'])
 
         context = super(WeekDetailView, self).get_context_data(**kwargs)
         context['day_list'] = Day.objects.filter(year_month=context.get('object')).extra(
@@ -123,7 +123,7 @@ class WeekDetailView(generic.DetailView):
         return context
 
 
-def reverse_duration(number):
+def which_week(number):
     if int(number) == 0:
         return 0, 7
     elif int(number) == 1:
