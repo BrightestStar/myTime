@@ -1,3 +1,4 @@
+from .views import line_chart_json
 from django.urls import path, re_path
 
 from .import views
@@ -14,8 +15,13 @@ urlpatterns = [
          views.MonthDetailView.as_view(), name="month_detail"),
 ]
 urlpatterns += [
-    path('weeks/<int:pk>/detail/<int:number>', views.WeekDetailView.as_view(), name="week_detail"),
+    path('weeks/<int:pk>/detail/number/<int:number>', views.WeekDetailView.as_view(), name="week_detail"),
     path('days/<int:pk>/detail/', views.DayDetailView.as_view(), name="day_detail"),
-    path('year_month/<int:pk>/generate_days/',
+    path('year_month/<int:pk>/generate_days/<int:number>',
          views.generate_days, name='generate_days'),
+]
+
+
+urlpatterns += [
+    path('week_chart', line_chart_json, name='line_chart_json'),
 ]

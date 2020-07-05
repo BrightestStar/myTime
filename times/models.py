@@ -32,6 +32,8 @@ class Item(models.Model):
     item_name = models.CharField(max_length=200)
     duration = models.DecimalField(decimal_places=2, max_digits=64)
     day = models.ForeignKey(Day, on_delete=models.CASCADE)
+    year_month = models.ForeignKey(
+        'YearMonth', on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
         return self.item_name

@@ -1,5 +1,6 @@
+from chartjs.views.lines import BaseLineChartView
 from datetime import datetime
-import re, os, time
+import re, os, time, re
 import codecs as cs
 from bs4 import BeautifulSoup
 from django.shortcuts import get_object_or_404, render
@@ -55,7 +56,7 @@ class MonthDetailView(generic.DetailView):
         return context
 
 
-def generate_days(request, pk):
+def generate_days(request, pk, **kwargs):
     # statistic time for this function
     t_1 = datetime.now()
 
@@ -64,8 +65,12 @@ def generate_days(request, pk):
     yy, mm = int(year_month.year), int(year_month.month)
 
     # read files the type of html on local
-    dir_path = DIR_PATH % (yy, mm)
-    files = glob.glob(dir_path)
+    number = kwargs['number']
+    files = obtain_files(yy, mm, number)
+
+    if len(files) <= 0:
+        return HttpResponseRedirect(reverse('times:month_detail', args=[pk]))
+
     for idx_f, file in enumerate(files):
         file_name = os.path.basename(file)
         params = dict()
@@ -81,6 +86,11 @@ def generate_days(request, pk):
             for idx, item_text in enumerate(reset_doc):
                 if idx == 0:
                     month, dd, hh, mi = re.findall(r'\d+', item_text)
+                    try: 
+                        Day.objects.filter(day_name=f'{dd}/{mm}/{yy}', year_month=year_month).delete()
+                    except:
+                        print('Dose Not Exist object')
+
                     if int(month) == mm:
                         params['day_name'] = f'{dd}/{mm}/{yy}'
                         params['begin_time'] = datetime.strptime(
@@ -88,11 +98,13 @@ def generate_days(request, pk):
                         params['recorder'] = recorder
                         params['year_month'] = year_month
                         day = Day(**params)
+                    else:
+                        return HttpResponseRedirect(reverse('times:month_detail', args=[pk]))
                 else:
                     try:
                         *item_name, duration = item_text.replace('分钟', '').split('：')
-                        item = Item(item_name='#'.join(item_name),
-                                    duration=duration, day=day)
+                        item = Item(item_name='#'.join(
+                            item_name), duration=duration, day=day, year_month=year_month)
                         item.save()
                         grant_time += int(duration)
                     except:
@@ -102,6 +114,18 @@ def generate_days(request, pk):
     t_2 = datetime.now() - t_1
     print(t_2)
     return HttpResponseRedirect(reverse('times:month_detail', args=[pk]))
+
+
+def obtain_files(yy, mm, number):
+    start_day, end_day = which_week(number)
+    dir_path = DIR_PATH % (yy, mm)
+    files = [file for file in glob.glob(dir_path) if "index.html" not in file]
+    return sorted(files, key=file_title)[start_day:end_day]
+
+
+def file_title(filename):
+    pattern = re.compile(r'(\d+)')
+    return int(pattern.findall(filename)[-1])
 
 
 class DayDetailView(generic.DetailView):
@@ -117,7 +141,8 @@ class WeekDetailView(generic.DetailView):
         start_day, end_day = which_week(self.kwargs['number'])
 
         context = super(WeekDetailView, self).get_context_data(**kwargs)
-        context['day_list'] = Day.objects.filter(year_month=context.get('object')).extra(
+        context['number'] = self.kwargs['number']
+        context['day_list'] = Day.objects.filter(year_month=kwargs['object']).extra(
             select={'day_number': 'CAST(day_name AS INTEGER)'}
         ).order_by('day_number')[start_day:end_day]
         return context
@@ -132,3 +157,58 @@ def which_week(number):
         return 15, 21
     elif int(number) == 3:
         return 22, 31
+    elif int(number) == 6:
+        return 0, 31
+
+
+class LineChartJSONView(BaseLineChartView):
+    def get_labels(self):
+        results = []
+        days = self.obtain_days()
+
+        for day in days:
+            for item in day.item_set.all():
+                if item.item_name not in results:
+                    results.append(item.item_name)
+
+        return results
+
+    def get_providers(self):
+        results = []
+        days = self.obtain_days()
+
+        for day in days:
+            results.append(day.day_name)
+        return results
+
+    def get_data(self):
+        names = []
+        results = []
+        days = self.obtain_days()
+
+        for day in days:
+            for item in day.item_set.all():
+                if item.item_name not in names:
+                    names.append(item.item_name)
+        
+        for day in days:
+            results1 = [0] * len(names)
+            for item in day.item_set.all():
+                idx = names.index(item.item_name)
+                results1[idx] = item.duration
+            results.append(results1)
+
+        return results
+
+    def obtain_days(self):
+        week_pk = self.request.GET.get('weeks')
+        number = self.request.GET.get('number')
+        start_day, end_day = which_week(number)
+        year_month = YearMonth.objects.filter(pk=week_pk)
+
+        return Day.objects.filter(year_month__in=year_month).extra(
+            select={'day_number': 'CAST(day_name AS INTEGER)'}
+        ).order_by('day_number')[start_day:end_day]
+
+
+line_chart_json = LineChartJSONView.as_view()

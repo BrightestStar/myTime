@@ -3,7 +3,7 @@
 {% load filters_extras %}
 
 {% block content %}
-    <a href="{% url 'times:generate_days' yearmonth.pk %}" class="btn btn-sm btn-primary float-right">Generate Days</a>
+    <a href="{% url 'times:generate_days' yearmonth.pk 6 %}" class="btn btn-sm btn-primary float-right">Generate Days</a>
     {% if day_list %}
         <ul>
         {% for day in day_list %}
