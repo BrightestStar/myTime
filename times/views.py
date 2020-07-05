@@ -195,7 +195,7 @@ class LineChartJSONView(BaseLineChartView):
             results1 = [0] * len(names)
             for item in day.item_set.all():
                 idx = names.index(item.item_name)
-                results1[idx] = item.duration
+                results1[idx] += item.duration
             results.append(results1)
 
         return results
