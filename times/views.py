@@ -1,3 +1,4 @@
+import numpy as np
 from chartjs.views.lines import BaseLineChartView
 from datetime import datetime
 import re, os, time, re
@@ -163,52 +164,63 @@ def which_week(number):
 
 class LineChartJSONView(BaseLineChartView):
     def get_labels(self):
-        results = []
-        days = self.obtain_days()
-
-        for day in days:
-            for item in day.item_set.all():
-                if item.item_name not in results:
-                    results.append(item.item_name)
-
-        return results
+        return list(self.sort_data().keys())
 
     def get_providers(self):
         results = []
-        days = self.obtain_days()
+        year_month_pk, number = self.week_number()
+        year_month_name = YearMonth.objects.get(pk=year_month_pk).y_m
 
-        for day in days:
-            results.append(day.day_name)
+        results.append('%s#%s :' % (year_month_name, number))
+        
         return results
 
+
     def get_data(self):
-        names = []
         results = []
+        percent = 0
+        total = sum(list(self.sort_data().values()))
+        for value in list(self.sort_data().values()):
+            percent += value/total
+            results.append(round(percent*100, 2))
+
+        return [results]
+
+
+    def sort_data(self):
+        names = []
+        results = dict()
         days = self.obtain_days()
 
         for day in days:
             for item in day.item_set.all():
                 if item.item_name not in names:
                     names.append(item.item_name)
-        
+
         for day in days:
-            results1 = [0] * len(names)
             for item in day.item_set.all():
-                idx = names.index(item.item_name)
-                results1[idx] += item.duration
-            results.append(results1)
+                results[item.item_name] = results.get(item.item_name, 0) + item.duration
+
+        results = {k: v for k, v in sorted(
+            results.items(), key=lambda item: item[1], reverse=True)}
 
         return results
 
     def obtain_days(self):
-        week_pk = self.request.GET.get('weeks')
-        number = self.request.GET.get('number')
+        year_month_pk, number = self.week_number()
         start_day, end_day = which_week(number)
-        year_month = YearMonth.objects.filter(pk=week_pk)
+        year_month = YearMonth.objects.filter(pk=year_month_pk)
 
         return Day.objects.filter(year_month__in=year_month).extra(
             select={'day_number': 'CAST(day_name AS INTEGER)'}
         ).order_by('day_number')[start_day:end_day]
 
+
+    def week_number(self):
+        # numebr which is the weeks's serial number
+        year_month_pk = self.request.GET.get('weeks')
+        number = self.request.GET.get('number')
+
+        return year_month_pk, number
 
 line_chart_json = LineChartJSONView.as_view()
