@@ -1,3 +1,4 @@
+from django.db.models import Sum
 import numpy as np
 from chartjs.views.lines import BaseLineChartView
 from datetime import datetime
@@ -9,7 +10,7 @@ from django.shortcuts import get_object_or_404, render
 from django.http import HttpResponseRedirect
 from django.template import loader
 
-from .models import Day, Item, YearMonth
+from .models import Day, Item, YearMonth, Category, TimePlan
 
 # import the current file settings
 from .settings import DIR_PATH
@@ -98,14 +99,18 @@ def generate_days(request, pk, **kwargs):
                             f'{yy}/{mm}/{dd} {hh}:{mi}', '%Y/%m/%d %H:%M').strftime("%H:%M")
                         params['recorder'] = recorder
                         params['year_month'] = year_month
+                        params['pub_date'] = datetime.strptime(
+                            f'{yy}/{mm}/{dd}', '%Y/%m/%d')
                         day = Day(**params)
                     else:
                         return HttpResponseRedirect(reverse('times:month_detail', args=[pk]))
                 else:
                     try:
                         *item_name, duration = item_text.replace('分钟', '').split('：')
-                        item = Item(item_name='#'.join(
-                            item_name), duration=duration, day=day, year_month=year_month)
+                        item_name = '#'.join(item_name)
+                        category = classify(item_name)
+                        item = Item(item_name=item_name, duration=duration, day=day,
+                                    year_month=year_month, category=category, pub_date=day.pub_date)
                         item.save()
                         grant_time += int(duration)
                     except:
@@ -128,6 +133,14 @@ def file_title(filename):
     pattern = re.compile(r'(\d+)')
     return int(pattern.findall(filename)[-1])
 
+def classify(name):
+    pre_name = name.split('@')[0]
+    category = Category.objects.filter(cname=pre_name)
+    if not category.exists() and pre_name:
+        category = Category(cname=pre_name, alias=pre_name)
+        category.save()
+
+    return Category.objects.get(cname=pre_name)
 
 class DayDetailView(generic.DetailView):
     model = Day
@@ -146,7 +159,26 @@ class WeekDetailView(generic.DetailView):
         context['day_list'] = Day.objects.filter(year_month=kwargs['object']).extra(
             select={'day_number': 'CAST(day_name AS INTEGER)'}
         ).order_by('day_number')[start_day:end_day]
+        context['subtotals'] = subtotals(
+            kwargs['object'].year, kwargs['object'].month, start_day, end_day)
         return context
+
+
+def subtotals(yy, mm, sday, eday):
+    start_date = datetime.strptime(f'{yy}/{mm}/{sday+1}', '%Y/%m/%d')
+    try:
+        end_date = datetime.strptime(f'{yy}/{mm}/{eday}', '%Y/%m/%d')
+    except:
+        end_date = datetime.strptime(f'{yy}/{mm}/{eday-1}', '%Y/%m/%d')
+    results = {}
+    clist = Category.objects.all().values_list('alias', flat=True)
+
+    for alias in set(list(clist)):
+        for c in Category.objects.filter(alias=alias):
+            items = c.item_set.filter(pub_date__range=[start_date, end_date])
+            results[alias] = results.get(alias, 0) + sum(items.values_list('duration', flat=True))
+
+    return results
 
 
 def which_week(number):
@@ -160,67 +192,3 @@ def which_week(number):
         return 22, 31
     elif int(number) == 6:
         return 0, 31
-
-
-class LineChartJSONView(BaseLineChartView):
-    def get_labels(self):
-        return list(self.sort_data().keys())
-
-    def get_providers(self):
-        results = []
-        year_month_pk, number = self.week_number()
-        year_month_name = YearMonth.objects.get(pk=year_month_pk).y_m
-
-        results.append('%s#%s :' % (year_month_name, number))
-        
-        return results
-
-
-    def get_data(self):
-        results = []
-        percent = 0
-        total = sum(list(self.sort_data().values()))
-        for value in list(self.sort_data().values()):
-            percent += value/total
-            results.append(round(percent*100, 2))
-
-        return [results]
-
-
-    def sort_data(self):
-        names = []
-        results = dict()
-        days = self.obtain_days()
-
-        for day in days:
-            for item in day.item_set.all():
-                if item.item_name not in names:
-                    names.append(item.item_name)
-
-        for day in days:
-            for item in day.item_set.all():
-                results[item.item_name] = results.get(item.item_name, 0) + item.duration
-
-        results = {k: v for k, v in sorted(
-            results.items(), key=lambda item: item[1], reverse=True)}
-
-        return results
-
-    def obtain_days(self):
-        year_month_pk, number = self.week_number()
-        start_day, end_day = which_week(number)
-        year_month = YearMonth.objects.filter(pk=year_month_pk)
-
-        return Day.objects.filter(year_month__in=year_month).extra(
-            select={'day_number': 'CAST(day_name AS INTEGER)'}
-        ).order_by('day_number')[start_day:end_day]
-
-
-    def week_number(self):
-        # numebr which is the weeks's serial number
-        year_month_pk = self.request.GET.get('weeks')
-        number = self.request.GET.get('number')
-
-        return year_month_pk, number
-
-line_chart_json = LineChartJSONView.as_view()
