@@ -199,10 +199,16 @@ def subtotals(yy, mm, bday, eday):
             estimates[alias] = estimates.get(
                 alias, 0) + sum(plans.values_list('duration', flat=True))
 
+    results = {k: v for k, v in sorted(
+        results.items(), key=lambda item: item[1], reverse=True)}
+    estimates = {k: v for k, v in sorted(
+        estimates.items(), key=lambda item: item[1], reverse=True)}
+
     return results, estimates
 
 # generate begin and end date
 def b_e_date(yy, mm, bday, eday):
+    print(bday, eday)
     yy, mm, bday, eday= int(yy), int(mm), int(bday+1), int(eday)
     begin_date = date(yy, mm, bday)
     try:
@@ -218,8 +224,8 @@ def which_week(number):
     elif int(number) == 1:
         return 7, 14
     elif int(number) == 2:
-        return 15, 21
+        return 14, 21
     elif int(number) == 3:
-        return 22, 31
+        return 21, 31
     elif int(number) == 6:
         return 0, 31
