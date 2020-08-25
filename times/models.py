@@ -49,7 +49,7 @@ class TimePlan(models.Model):
     end_date = models.DateField()
 
     def __str__(self):
-        return f'{begin_date}~{end_date}#{self.category.cname}-estimate'
+        return f'{self.begin_date}~{self.end_date}#{self.category.cname}-estimate'
 
 class Item(models.Model):
     item_name = models.CharField(max_length=200)

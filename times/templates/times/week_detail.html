@@ -1,6 +1,7 @@
 {% extends "base_generic.html" %}
 {% load crispy_forms_tags %}
 {% load filters_extras %}
+{% load mathfilters %}
 
 
 {% block content %}
@@ -15,17 +16,31 @@
         <p>No days are available.</p>
     {% endif %}
 
-    {% if subtotals %}
-        <ul>
+    <hr>
+
+    <a href="{% url 'times:estimates_create' yearmonth.pk number %}" class="btn btn-sm btn-info float-right">Generate Plan</a>
+    <br>
+    <ul>
+    {% with  total=subtotals|summary  %}
         {% for key, value in subtotals.items %}
             {% if value > 0 %}
-                <li>{{key}}: {{value}}</li>
+                {{key}} : 
+                {% if estimates|get_item:key > 0 %}
+                    {% with a=value b=estimates|get_item:key %}
+                        <div class="progress">
+                            <div class="progress-bar bg-info" role="progressbar" style="width:{{a|div:b|mul:100}}%;" aria-valuemin="0" aria-valuemax="100">{{a|div:b|mul:100|floatformat:2}}</div>
+                        </div>
+                    {% endwith %}
+                {% else %}
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-warning" role="progressbar" style="width:{{value|div:total|mul:100}}%;" aria-valuemin="0" aria-valuemax="100">{{value|div:total|mul:100|floatformat:2}}</div>
+                    </div>
+                {% endif %}
             {% endif %}
         {% endfor %}
-        </ul>
-    {% else %}
-        <p>No days are available.</p>
-    {% endif %}
+    {% endwith %}
+    </ul>
+
 {% endblock %}
 
 {% block filter %}

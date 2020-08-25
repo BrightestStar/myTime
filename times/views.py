@@ -1,7 +1,7 @@
 from django.db.models import Sum
 import numpy as np
 from chartjs.views.lines import BaseLineChartView
-from datetime import datetime
+from datetime import datetime, date
 import re, os, time, re
 import codecs as cs
 from bs4 import BeautifulSoup
@@ -57,6 +57,26 @@ class MonthDetailView(generic.DetailView):
         
         return context
 
+
+class EstimateCreate(CreateView):
+    model = TimePlan
+    fields = '__all__'
+
+    def get_initial(self):
+        initial = super(EstimateCreate, self).get_initial()
+        yearmonth = YearMonth.objects.get(pk=self.kwargs['pk'])
+        bday, eday = which_week(self.kwargs['number'])
+        begin_date, end_date = b_e_date(
+            yearmonth.year, yearmonth.month, bday, eday)
+        initial.update({'begin_date': begin_date,
+                        'end_date': end_date})
+        return initial
+
+    def form_valid(self, form):
+        self.object = form.save(commit=False)
+        self.object.save()
+        pk, number = self.kwargs['pk'], self.kwargs['number']
+        return HttpResponseRedirect(reverse('times:week_detail', args=[pk, number]))
 
 def generate_days(request, pk, **kwargs):
     # statistic time for this function
@@ -159,27 +179,38 @@ class WeekDetailView(generic.DetailView):
         context['day_list'] = Day.objects.filter(year_month=kwargs['object']).extra(
             select={'day_number': 'CAST(day_name AS INTEGER)'}
         ).order_by('day_number')[start_day:end_day]
-        context['subtotals'] = subtotals(
+        context['subtotals'], context['estimates'] = subtotals(
             kwargs['object'].year, kwargs['object'].month, start_day, end_day)
         return context
 
 
-def subtotals(yy, mm, sday, eday):
-    start_date = datetime.strptime(f'{yy}/{mm}/{sday+1}', '%Y/%m/%d')
-    try:
-        end_date = datetime.strptime(f'{yy}/{mm}/{eday}', '%Y/%m/%d')
-    except:
-        end_date = datetime.strptime(f'{yy}/{mm}/{eday-1}', '%Y/%m/%d')
+def subtotals(yy, mm, bday, eday):
+    begin_date, end_date = b_e_date(yy, mm, bday, eday)
     results = {}
+    estimates = {}
     clist = Category.objects.all().values_list('alias', flat=True)
 
     for alias in set(list(clist)):
         for c in Category.objects.filter(alias=alias):
-            items = c.item_set.filter(pub_date__range=[start_date, end_date])
-            results[alias] = results.get(alias, 0) + sum(items.values_list('duration', flat=True))
+            items = c.item_set.filter(pub_date__range=[begin_date, end_date])
+            results[alias] = results.get(
+                alias, 0) + sum(items.values_list('duration', flat=True))
+            plans = c.timeplan_set.filter(begin_date=begin_date)
+            estimates[alias] = estimates.get(
+                alias, 0) + sum(plans.values_list('duration', flat=True))
 
-    return results
+    return results, estimates
 
+# generate begin and end date
+def b_e_date(yy, mm, bday, eday):
+    yy, mm, bday, eday= int(yy), int(mm), int(bday+1), int(eday)
+    begin_date = date(yy, mm, bday)
+    try:
+        end_date = date(yy, mm, eday)
+    except:
+        end_date = date(yy, mm, eday-1)
+
+    return begin_date, end_date
 
 def which_week(number):
     if int(number) == 0:

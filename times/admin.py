@@ -1,8 +1,9 @@
 from django.contrib import admin
 
-from .models import Day, Item, Category
+from .models import Day, Item, Category, TimePlan
 
 admin.site.register(Day)
+admin.site.register(TimePlan)
 
 
 @admin.register(Category)

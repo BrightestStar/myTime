@@ -13,9 +13,16 @@ urlpatterns = [
     path('month_detail/<int:pk>',
          views.MonthDetailView.as_view(), name="month_detail"),
 ]
+
 urlpatterns += [
-    path('weeks/<int:pk>/detail/number/<int:number>', views.WeekDetailView.as_view(), name="week_detail"),
+    path('weeks/<int:pk>/detail/number/<int:number>',
+         views.WeekDetailView.as_view(), name="week_detail"),
     path('days/<int:pk>/detail/', views.DayDetailView.as_view(), name="day_detail"),
     path('year_month/<int:pk>/generate_days/<int:number>',
          views.generate_days, name='generate_days'),
+]
+
+urlpatterns +=[
+    path('weeks/<int:pk>/detail/number/<int:number>/estimates_create',
+         views.EstimateCreate.as_view(), name='estimates_create'),
 ]
