@@ -189,13 +189,13 @@ def subtotals(yy, mm, bday, eday):
     results = {}
     estimates = {}
     clist = Category.objects.all().values_list('alias', flat=True)
-
     for alias in set(list(clist)):
         for c in Category.objects.filter(alias=alias):
-            items = c.item_set.filter(pub_date__range=[begin_date, end_date])
+            items = c.item_set.filter(
+                pub_date__range=[begin_date, end_date]).distinct()
             results[alias] = results.get(
                 alias, 0) + sum(items.values_list('duration', flat=True))
-            plans = c.timeplan_set.filter(begin_date=begin_date)
+            plans = c.timeplan_set.filter(begin_date=begin_date).distinct()
             estimates[alias] = estimates.get(
                 alias, 0) + sum(plans.values_list('duration', flat=True))
 

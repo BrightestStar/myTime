@@ -22,6 +22,8 @@
     <br>
     <ul>
     {% with  total=subtotals|summary  %}
+        <h5>本周: {{total}} 分钟 </h5>
+        <br>
         {% for key, value in subtotals.items %}
             {% if value > 0 %}
                 {{key}} : 
