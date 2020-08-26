@@ -208,7 +208,6 @@ def subtotals(yy, mm, bday, eday):
 
 # generate begin and end date
 def b_e_date(yy, mm, bday, eday):
-    print(bday, eday)
     yy, mm, bday, eday= int(yy), int(mm), int(bday+1), int(eday)
     begin_date = date(yy, mm, bday)
     try:
