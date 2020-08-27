@@ -1,0 +1,28 @@
+{% extends "base_generic.html" %}
+{% load crispy_forms_tags %}
+{% load filters_extras %}
+
+{% block content %}
+    {% if time_plans %}
+        <ul>
+        {% for plan in time_plans %}
+            <li><a href="{% url 'times:estimate_update' params|get_item:'pk' params|get_item:'number' plan.pk %}">{{ plan.category.cname }}</a></li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No days are available.</p>
+    {% endif %}
+{% endblock %}
+
+{% block filter %}
+    <div class="card" style="width: 18rem;">
+        <div class="card-header">
+            Filter By Week
+        </div>
+        <ul class="list-group list-group-flush">
+            {% for i in '0123' %}
+                <li class="list-group-item"><a href="{% url 'times:week_detail' params|get_item:'pk' i%}">第{{i|add:1}}周</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endblock %}

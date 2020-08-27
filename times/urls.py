@@ -15,7 +15,7 @@ urlpatterns = [
 ]
 
 urlpatterns += [
-    path('weeks/<int:pk>/detail/number/<int:number>',
+    path('year_month/<int:pk>/number/<int:number>',
          views.WeekDetailView.as_view(), name="week_detail"),
     path('days/<int:pk>/detail/', views.DayDetailView.as_view(), name="day_detail"),
     path('year_month/<int:pk>/generate_days/<int:number>',
@@ -23,6 +23,10 @@ urlpatterns += [
 ]
 
 urlpatterns +=[
-    path('weeks/<int:pk>/detail/number/<int:number>/estimates_create',
+    path('year_month/<int:pk>/number/<int:number>/estimates_create',
          views.EstimateCreate.as_view(), name='estimates_create'),
+    path('year_month/<int:pk>/number/<int:number>/plan_infos',
+         views.EstimateInfo.as_view(), name='plan_infos'),
+    path('year_month/<int:ym_pk>/number/<int:number>/time_plans/<int:pk>/update/',
+         views.EstimateUpdate.as_view(), name='estimate_update'),
 ]

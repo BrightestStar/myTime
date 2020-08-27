@@ -78,6 +78,28 @@ class EstimateCreate(CreateView):
         pk, number = self.kwargs['pk'], self.kwargs['number']
         return HttpResponseRedirect(reverse('times:week_detail', args=[pk, number]))
 
+
+class EstimateInfo(generic.DetailView):
+    model = YearMonth
+    template_name = 'times/time_plans.html'
+
+    def get_context_data(self, **kwargs):
+        begin_number, end_number = which_week(self.kwargs['number'])
+        begin_date = b_e_date(self.object.year, self.object.month, begin_number, end_number)[0]
+        context = super(EstimateInfo, self).get_context_data(**kwargs)
+        context['time_plans'] = TimePlan.objects.filter(begin_date=begin_date)
+        context['params'] = {'pk': self.object.pk,
+                             'number': self.kwargs['number']}
+
+        return context
+
+class EstimateUpdate(UpdateView):
+    model = TimePlan
+    fields = '__all__'
+
+    def get_success_url(self):
+        return reverse_lazy('times:week_detail', kwargs={'pk': self.kwargs['ym_pk'], 'number': self.kwargs['number']})
+
 def generate_days(request, pk, **kwargs):
     # statistic time for this function
     t_1 = datetime.now()
@@ -109,7 +131,7 @@ def generate_days(request, pk, **kwargs):
                 if idx == 0:
                     month, dd, hh, mi = re.findall(r'\d+', item_text)
                     try: 
-                        Day.objects.filter(day_name=f'{dd}/{mm}/{yy}', year_month=year_month).delete()
+                        Day.objects.filter(day_name=f'{dd}/{mm}/{yy}').delete()
                     except:
                         print('Dose Not Exist object')
 
@@ -143,10 +165,10 @@ def generate_days(request, pk, **kwargs):
 
 
 def obtain_files(yy, mm, number):
-    start_day, end_day = which_week(number)
+    begin_day, end_day = which_week(number)
     dir_path = DIR_PATH % (yy, mm)
     files = [file for file in glob.glob(dir_path) if "index.html" not in file]
-    return sorted(files, key=file_title)[start_day:end_day]
+    return sorted(files, key=file_title)[begin_day:end_day]
 
 
 def file_title(filename):
@@ -172,15 +194,15 @@ class WeekDetailView(generic.DetailView):
     template_name = 'times/week_detail.html'
 
     def get_context_data(self, **kwargs):
-        start_day, end_day = which_week(self.kwargs['number'])
+        begin_day, end_day = which_week(self.kwargs['number'])
 
         context = super(WeekDetailView, self).get_context_data(**kwargs)
         context['number'] = self.kwargs['number']
         context['day_list'] = Day.objects.filter(year_month=kwargs['object']).extra(
             select={'day_number': 'CAST(day_name AS INTEGER)'}
-        ).order_by('day_number')[start_day:end_day]
+        ).order_by('day_number')[begin_day:end_day]
         context['subtotals'], context['estimates'] = subtotals(
-            kwargs['object'].year, kwargs['object'].month, start_day, end_day)
+            kwargs['object'].year, kwargs['object'].month, begin_day, end_day)
         return context
 
 

@@ -17,7 +17,8 @@ class YearMonth(models.Model):
 
 
 class Day(models.Model):
-    year_month = models.ForeignKey('YearMonth', on_delete=models.SET_NULL, null=True)
+    year_month = models.ForeignKey(
+        'YearMonth', on_delete=models.CASCADE, null=True)
     recorder = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True)
     day_name = models.CharField(max_length=200)
