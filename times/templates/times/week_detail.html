@@ -31,7 +31,14 @@
                 {% if estimates|get_item:key > 0 %}
                     {% with a=value b=estimates|get_item:key %}
                         <div class="progress">
-                            <div class="progress-bar bg-info" role="progressbar" style="width:{{a|div:b|mul:100}}%;" aria-valuemin="0" aria-valuemax="100">{{value|div:total|mul:100|floatformat:2}}({{a|div:b|mul:100|floatformat:2}})</div>
+                            <div class="progress-bar bg-info" role="progressbar" style="width:{{a|div:b|mul:100}}%;" aria-valuemin="0" aria-valuemax="100">
+                                {{value|div:total|mul:100|floatformat:2}}({{a|div:b|mul:100|floatformat:2}})~~
+                                    {% if b|sub:a >= 0 %}
+                                        L {{b|sub:a}}
+                                    {% else %}
+                                        M {{a|sub:b}}
+                                    {% endif %}
+                            </div>
                         </div>
                     {% endwith %}
                 {% else %}
