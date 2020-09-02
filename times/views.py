@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 from django.shortcuts import get_object_or_404, render
 
 from django.http import HttpResponseRedirect
-from django.template import loader
+from django.template import loader, Library
 
 from .models import Day, Item, YearMonth, Category, TimePlan
 
@@ -100,6 +100,26 @@ class EstimateUpdate(UpdateView):
     def get_success_url(self):
         return reverse_lazy('times:week_detail', kwargs={'pk': self.kwargs['ym_pk'], 'number': self.kwargs['number']})
 
+
+class CategoryDetail(generic.ListView):
+    model = Category
+
+    def get_context_data(self, **kwargs):
+        begin_number, end_number = which_week(self.kwargs['number'])
+        y_m = YearMonth.objects.get(pk=self.kwargs['ym_pk'])
+        begin_date, end_date = b_e_date(
+            y_m.year, y_m.month, begin_number, end_number)
+        context = super(CategoryDetail, self).get_context_data(**kwargs)
+        context['category_list'] = Category.objects.filter(
+            alias=self.kwargs['key'])
+        context['params'] = {'pk': y_m.pk,
+                             'number': self.kwargs['number'],
+                             'begin_date': begin_date,
+                             'end_date': end_date,
+                             }
+
+        return context
+
 def generate_days(request, pk, **kwargs):
     # statistic time for this function
     t_1 = datetime.now()
@@ -161,7 +181,7 @@ def generate_days(request, pk, **kwargs):
                 day.save()
     t_2 = datetime.now() - t_1
     print(t_2)
-    return HttpResponseRedirect(reverse('times:month_detail', args=[pk]))
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 
 def obtain_files(yy, mm, number):
@@ -214,7 +234,7 @@ def subtotals(yy, mm, bday, eday):
     for alias in set(list(clist)):
         for c in Category.objects.filter(alias=alias):
             items = c.item_set.filter(
-                pub_date__range=[begin_date, end_date]).distinct()
+                pub_date__range=[begin_date, end_date])
             results[alias] = results.get(
                 alias, 0) + sum(items.values_list('duration', flat=True))
             plans = c.timeplan_set.filter(begin_date=begin_date).distinct()

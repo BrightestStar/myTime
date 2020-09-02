@@ -14,6 +14,7 @@ urlpatterns = [
          views.MonthDetailView.as_view(), name="month_detail"),
 ]
 
+# the url of detail for week and day
 urlpatterns += [
     path('year_month/<int:pk>/number/<int:number>',
          views.WeekDetailView.as_view(), name="week_detail"),
@@ -22,6 +23,7 @@ urlpatterns += [
          views.generate_days, name='generate_days'),
 ]
 
+# url for category and estimates
 urlpatterns +=[
     path('year_month/<int:pk>/number/<int:number>/estimates_create',
          views.EstimateCreate.as_view(), name='estimates_create'),
@@ -29,4 +31,6 @@ urlpatterns +=[
          views.EstimateInfo.as_view(), name='plan_infos'),
     path('year_month/<int:ym_pk>/number/<int:number>/time_plans/<int:pk>/update/',
          views.EstimateUpdate.as_view(), name='estimate_update'),
+    path('categories/<int:ym_pk>/<int:number>/<str:key>/',
+         views.CategoryDetail.as_view(), name='ctime_entry'),
 ]
